@@ -288,13 +288,18 @@ namespace P7MViewer
             {
                 // Load SMIME certificates from AD
                 targets.Add(recipient.Email);
-                str = recipient.Type + ": " + recipient.Email;
+                 str = recipient.Type + ": " + recipient.Email;
                 recipientNode.Nodes.Add(str);
                 txtBox.AppendText(str + "\n");
             }
 
             // Parse out from
-            string[] strings = Regex.Split(message.GetMapiProperty("007D").ToString(), Environment.NewLine);
+            targets.Add(message.GetMapiProperty("5D01").ToString()); // PidTagSenderEmailAddress
+
+            // Old style
+            /*
+            string[] strings = Regex.Split(message.GetMapiProperty("007D").ToString(), Environment.NewLine); // PidTagTransportMessageHeaders, https://interoperability.blob.core.windows.net/files/MS-OXPROPS/%5bMS-OXPROPS%5d.pdf
+            
             foreach (string s in strings)
             {
                 if (s.StartsWith("From:"))
@@ -307,7 +312,7 @@ namespace P7MViewer
                     }
                 }
             }
-            
+            */
 
             foreach (string target in targets)
             {
@@ -330,7 +335,7 @@ namespace P7MViewer
                 attachmentNode.Nodes.Add(str);
                 txtBox.AppendText(str + "\n");
                 // Check for SMIME attachment
-                if (attachment.Filename.Contains("p7m")) // Weaken the check
+                if (attachment.Filename.Contains("p7m")) 
                 {
                     smimefound = true;
                     txtBox.AppendText("==== PKCS#7 Enveloped data ====\n");
@@ -359,7 +364,7 @@ namespace P7MViewer
 
         private void about()
         {
-            MessageBox.Show("(c) 2010 by Markus Dauberschmidt");
+            MessageBox.Show("2010-2020 by Markus Dauberschmidt");
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -447,8 +452,6 @@ namespace P7MViewer
         {
             Clipboard.SetText(txtBox.Text);
         }
-
-
     }
 }
 
