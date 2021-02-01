@@ -1,0 +1,11 @@
+D:\VS-Projects\P\P7MViewer-Plugin\obj\Debug\ResolveAssemblyReference.cache
+D:\VS-Projects\P\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csproj.ResolveComReference.cache
+D:\VS-Projects\P\P7MViewer-Plugin\obj\Debug\P7MViewer.frmMain.resources
+D:\VS-Projects\P\P7MViewer-Plugin\obj\Debug\P7MViewer_Plugin.Properties.Resources.resources
+D:\VS-Projects\P\P7MViewer-Plugin\obj\Debug\ResGen.read.1.tlog
+D:\VS-Projects\P\P7MViewer-Plugin\obj\Debug\ResGen.write.1.tlog
+D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csprojResolveAssemblyReference.cache
+D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csproj.ResolveComReference.cache
+D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer.frmMain.resources
+D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer_Plugin.Properties.Resources.resources
+D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csproj.GenerateResource.Cache

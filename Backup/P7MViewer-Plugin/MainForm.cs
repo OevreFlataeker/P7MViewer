@@ -13,15 +13,21 @@ using System.Security.Cryptography.Xml;
 using System.IO;
 using iwantedue;
 using iwantedue.Windows.Forms;
-using System.DirectoryServices;
-using System.DirectoryServices.ActiveDirectory;
+using Outlook = Microsoft.Office.Interop.Outlook;
+using Office = Microsoft.Office.Core;
+using Redemption;
 
 namespace P7MViewer
 {
     public partial class frmMain : Form
     {
         private bool smimefound = false;
-        private Dictionary<string, X509Certificate2> certs = new Dictionary<string, X509Certificate2>();
+        private Outlook.MailItem email;
+        public void setOutlookMessage(Outlook.MailItem mail)
+        {
+            this.email = mail;
+
+        }
         public frmMain()
         {
             InitializeComponent();
@@ -30,10 +36,6 @@ namespace P7MViewer
             
         }
 
-        private string printCertDetails(X509Certificate2 c)
-        {
-            return string.Format("SubjectName: {0}, valid from: {1}, valid until: {2}", c.Subject, c.NotBefore, c.NotAfter);
-        }
         public void parsePKCS7(byte[] pkcs7stream, TreeNode node)
         {
             /*FileStream encFile = new FileStream(
@@ -71,7 +73,7 @@ namespace P7MViewer
                 str = "Number of recipients " + envData.RecipientInfos.Count;
                 txtBox.AppendText(str + "\n");
                 TreeNode numRecp = node.Nodes.Add(str);
-                
+
                 int num = 1;
                 foreach (RecipientInfo r in envData.RecipientInfos)
                 {
@@ -84,57 +86,26 @@ namespace P7MViewer
                     str = "    Encryption alg=" + r.KeyEncryptionAlgorithm.Oid.FriendlyName + ", OID=" + r.KeyEncryptionAlgorithm.Oid.Value;                                        
                     txtBox.AppendText(str + "\n");
                     n = rec.Nodes.Add(str.Trim());
-
-                    str = "    RecipientIdentifier.Type=" + r.RecipientIdentifier.Type;
-                    txtBox.AppendText(str + "\n");
-                    n = rec.Nodes.Add(str.Trim());
                     
-                    switch (r.RecipientIdentifier.Type)
+                    if (r.RecipientIdentifier.Type ==
+                        SubjectIdentifierType.IssuerAndSerialNumber)
                     {
-                        case SubjectIdentifierType.IssuerAndSerialNumber:
+                        X509IssuerSerial xi =
+                            (X509IssuerSerial)r.RecipientIdentifier.Value;
+                        str = "    Issuer=" + xi.IssuerName;
+                        txtBox.AppendText(str +"\n");
+                        TreeNode i = rec.Nodes.Add(str.Trim());
 
-                            X509IssuerSerial xi =
-                                (X509IssuerSerial)r.RecipientIdentifier.Value;
-                            str = "    Issuer=" + xi.IssuerName;
-                            txtBox.AppendText(str + "\n");
-                            rec.Nodes.Add(str.Trim());
-
-                            str = "    SerialNumber=" + xi.SerialNumber + " (hex)";
-                            txtBox.AppendText(str + "\n");
-                            rec.Nodes.Add(str.Trim());
-
-                            bool found = false;
-                            foreach (X509Certificate2 c in certs.Values)
-                            {
-                                if (c.SerialNumber == xi.SerialNumber)
-                                {
-                                    str = "    Certificate Details=" + printCertDetails(c);
-                                    txtBox.AppendText(str + "\n");
-                                    rec.Nodes.Add(str.Trim());
-                                    found = true;
-                                }
-                            }
-
-                            if (!found)
-                            {
-                                str = "    Certificate Details=<could not be identified in AD>";
-                                txtBox.AppendText(str + "\n");
-                                rec.Nodes.Add(str.Trim());
-                            }
-                            break;
-                        case SubjectIdentifierType.NoSignature:
-                            str = "    No signature";
-                            txtBox.AppendText(str + "\n");
-                            rec.Nodes.Add(str.Trim());
-                            break;
-                        case SubjectIdentifierType.SubjectKeyIdentifier:
-                        case SubjectIdentifierType.Unknown:                        
-                            str = "    SubjectKeyInfo=" + r.RecipientIdentifier.Value + "(no X.509 tag)";
-                            txtBox.AppendText(str + "\n");
-                            rec.Nodes.Add(str.Trim());
-                            break;
+                        str = "    SerialNumber=" + xi.SerialNumber + " (hex) / " + int.Parse(xi.SerialNumber, System.Globalization.NumberStyles.HexNumber) + " (dec)";
+                        txtBox.AppendText(str+"\n");
+                        TreeNode s = rec.Nodes.Add(str.Trim());
                     }
-                    
+                    else
+                    {
+                        str = "    SubjectKeyInfo=" + r.RecipientIdentifier.Value + "(no X.509 tag)";
+                        txtBox.AppendText(str+"\n");
+                        TreeNode s = rec.Nodes.Add(str.Trim());
+                    }
                 }
 
                 txtBox.AppendText("\n");
@@ -165,7 +136,7 @@ namespace P7MViewer
             }
             catch (Exception ex)
             {
-                txtBox.AppendText(ex.Message);
+                txtBox.AppendText(ex.ToString());
             }
             finally
             {
@@ -184,6 +155,12 @@ namespace P7MViewer
                 }
             }
         }
+        public void readMail()
+        {
+            this.loadMessage(treeView.Nodes.Add("Message"));
+        }
+
+        
 
         private void readFile(String filename) {
             txtBox.Clear();
@@ -196,9 +173,8 @@ namespace P7MViewer
                 MessageBox.Show("No Outlook MSG file!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 message.Dispose();
                 return;
-            }            
+            }
             smimefound = false;
-
             this.loadMessage(message,treeView.Nodes.Add("Message"));
             message.Dispose();
             mnuExport.Enabled = true;
@@ -221,68 +197,121 @@ namespace P7MViewer
             openFile();
         }
 
-        /// <summary>
-        /// Get user certificate from Active Directory (Source https://mjc.si/2016/12/10/get-user-certificate-from-active-directory/")
-        /// </summary>
-        /// <param name="ldapEntry">LDAP://DC=domain,DC=local</param>
-        /// <param name="ldapUserName">User to connect to Active Directory, set null if not required.</param>
-        /// <param name="ldapPassword">Password to connect to Active Directory, set null if not required.</param>
-        /// <param name="userIdentificator">user name to search in AD</param>
-        /// <param name="propertyName">Set property name, for example userCertificate</param>
-        /// <param name="Filter">Ldap filter string like "(&(objectClass=contact)(name=John))".</param>
-        /// <returns></returns>
-        private static X509Certificate2 GetUserCertificateFromAD(string email)
+
+        private void loadMessage(TreeNode messageNode)
         {
-            try
-            {
-                DirectoryEntry de;
-
-                de = Domain.GetCurrentDomain().GetDirectoryEntry();
-                                
-                DirectorySearcher dsearch = new DirectorySearcher(de);
-                dsearch.Filter = String.Format("(&(objectCategory=person)(objectClass=user)(userPrincipalName={0}))", email);
-                SearchResultCollection searchResults = dsearch.FindAll();
-
-                foreach (System.DirectoryServices.SearchResult result in searchResults)
-                {
-                    //Find userCertificate
-                    if (result.Properties.Contains("userCertificate"))
-                    {
-                        Byte[] certBytes = (Byte[])result.Properties["userCertificate"][0];
-
-                        X509Certificate2 certificate = null;
-                        certificate = new X509Certificate2(certBytes);
-
-                        return certificate;
-                    }
-                    else
-                    {
-                        //implement logging
-                        return null;
-                    }
-                }
-
-                de.Close();
-                de.Dispose();
-                return null;
-            }
-            catch (Exception ex)
-            {
-                //implement logging
-                return null;
-            }
-        }
-        private void loadMessage(OutlookStorage.Message message, TreeNode messageNode)
-        {                  
             String str;
 
             str = "Outlook Envelope data";
             messageNode.Text = str;
             txtBox.AppendText(str + "\n");
 
-            str = "SMTP Routing Header\n " + message.GetMapiProperty("007D").ToString(); 
+            
+
+            
+
+            //Redemption.SafeMailItemClass emailR = new Redemption.SafeMailItemClass();
+
+            
+            
+
+            /*str = email.Subject;
+            messageNode.Nodes.Add(str);
+            txtBox.AppendText(str + "\n");
+
+            str = "Subject: " + email.Subject;
+            messageNode.Nodes.Add(str);
+            txtBox.AppendText(str + "\n");
+            */
+
+            /*TreeNode bodyNode = messageNode.Nodes.Add("Body: (double click to view)");
+            bodyNode.Tag = new string[] { message.BodyText, message.BodyRTF };
+            */
+
+            /* WE'RE NOT GETTING ANY FURTHER HERE, BECAUSE OUTLOOK WILL THROW AN "Your digital ID cannot be found"
+             * error as soon as we *try* to access the various mail properties....
+             * Stupid Outlook...
+             * 
+             * Try another programming model?
+             * Outlook seems to behave as when a user tries to access
+             */
+            try
+            {
+                str = "Recipients: " + email.Recipients.Count;
+                TreeNode recipientNode = messageNode.Nodes.Add(str);
+                txtBox.AppendText(str + "\n");
+                foreach (Outlook.Recipient recipient in email.Recipients)
+                {
+                    Redemption.MAPIUtilsClass muc = new Redemption.MAPIUtilsClass();
+                    String recp = (String) muc.HrGetOneProp(recipient.AddressEntry.MAPIOBJECT, 0x39FE001E);
+                    
+                    str = recipient.Type + ": " + recipient.Address;
+                    recipientNode.Nodes.Add(str);
+                    txtBox.AppendText(str + "\n");
+                }
+
+                str = "Attachments: " + email.Attachments.Count;
+                TreeNode attachmentNode = messageNode.Nodes.Add(str);
+                txtBox.AppendText(str + "\n");
+                SafeMailItem smi = new SafeMailItemClass();
+                smi.Item = email;
+                System.Collections.IEnumerator i = smi.Attachments.GetEnumerator();
+                while (i.MoveNext() == true)
+                {
+
+                   
+                    Redemption.Attachment attachment = (Redemption.Attachment)i.Current;
+
+
+                    str = attachment.FileName + ": " + attachment.Size + " bytes";
+                    attachmentNode.Nodes.Add(str);
+                    txtBox.AppendText(str + "\n");
+                    // Check for SMIME attachment
+                    if (attachment.FileName.Equals("smime.p7m"))
+                    {
+                        smimefound = true;
+                        txtBox.AppendText("==== PKCS#7 Enveloped data ====\n");
+                        
+                        
+                        
+                        
+                        parsePKCS7((byte [])attachment.AsArray, attachmentNode);
+                    }
+                }
+                /*
+                str = "Sub Messages: " + email.Messages.Count;
+                TreeNode subMessageNode = messageNode.Nodes.Add(str);
+                txtBox.AppendText(str + "\n");
+                foreach (OutlookStorage.Message subMessage in message.Messages)
+                {
+                    this.loadMessage(subMessage, subMessageNode.Nodes.Add("MSG"));
+                }
+                */
+                if (smimefound)
+                {
+                    statusBar.Text = "S/MIME attachment(s) found!";
+                }
+                else
+                {
+                    statusBar.Text = "No S/MIME attachment(s) found!";
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+        private void loadMessage(OutlookStorage.Message message, TreeNode messageNode)
+        {
+
+            
+            String str;
+
+            str = "Outlook Envelope data";
             messageNode.Text = str;
             txtBox.AppendText(str + "\n");
+
 
             str = message.Subject;
             messageNode.Nodes.Add(str);
@@ -301,23 +330,10 @@ namespace P7MViewer
             txtBox.AppendText(str + "\n");
             foreach (OutlookStorage.Recipient recipient in message.Recipients)
             {
-                // Load SMIME certificates from AD
-                if (!certs.ContainsKey(recipient.Email))
-                { 
-                    X509Certificate2 cert = GetUserCertificateFromAD(recipient.Email);
-                    if (cert != null)
-                    {
-                        certs.Add(recipient.Email, cert);
-                    }
-                }
                 str = recipient.Type + ": " + recipient.Email;
                 recipientNode.Nodes.Add(str);
                 txtBox.AppendText(str + "\n");
             }
-
-        
-
-            
 
             str = "Attachments: " + message.Attachments.Count;
             TreeNode attachmentNode = messageNode.Nodes.Add(str);
@@ -328,13 +344,11 @@ namespace P7MViewer
                 attachmentNode.Nodes.Add(str);
                 txtBox.AppendText(str + "\n");
                 // Check for SMIME attachment
-                if (attachment.Filename.Contains("p7m")) // Weaken the check
+                if (attachment.Filename.Equals("smime.p7m"))
                 {
                     smimefound = true;
                     txtBox.AppendText("==== PKCS#7 Enveloped data ====\n");
-                    
                     parsePKCS7(attachment.Data, attachmentNode);
-                    
                 }
             }
 
@@ -367,7 +381,7 @@ namespace P7MViewer
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            System.Windows.Forms.Application.Exit();
+            Application.Exit();
         }
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
