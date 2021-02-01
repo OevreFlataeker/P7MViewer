@@ -14,12 +14,3 @@ D:\VS-Projects\P7MViewer\P7MViewer\obj\Debug\P7MViewer.Properties.Resources.reso
 D:\VS-Projects\P7MViewer\P7MViewer\obj\Debug\P7MViewer.csproj.GenerateResource.Cache
 D:\VS-Projects\P7MViewer\P7MViewer\obj\Debug\P7MViewer.exe
 D:\VS-Projects\P7MViewer\P7MViewer\obj\Debug\P7MViewer.pdb
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\bin\Debug\P7MViewer.exe
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\bin\Debug\P7MViewer.pdb
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\obj\Debug\P7MViewer.csprojAssemblyReference.cache
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\obj\Debug\P7MViewer.frmMain.resources
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\obj\Debug\P7MViewer.Properties.Resources.resources
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\obj\Debug\P7MViewer.csproj.GenerateResource.cache
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\obj\Debug\P7MViewer.csproj.CoreCompileInputs.cache
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\obj\Debug\P7MViewer.exe
-C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer\obj\Debug\P7MViewer.pdb

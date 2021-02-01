@@ -15,6 +15,7 @@ using iwantedue;
 using iwantedue.Windows.Forms;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
+using System.Text.RegularExpressions;
 
 namespace P7MViewer
 {
@@ -93,7 +94,7 @@ namespace P7MViewer
                             bool found = false;
                             foreach (X509Certificate2 c in certs.Values)
                             {
-                                if (c.SerialNumber == xi.SerialNumber)
+                                if (c.SerialNumber.ToLower() == xi.SerialNumber.ToLower())
                                 {
                                     str = "    Certificate Details=" + printCertDetails(c);
                                     txtBox.AppendText(str + "\n");
@@ -263,7 +264,7 @@ namespace P7MViewer
             messageNode.Text = str;
             txtBox.AppendText(str + "\n");
 
-            str = "SMTP Routing Header\n " + message.GetMapiProperty("007D").ToString(); 
+            str = "SMTP Routing Header\n " + message.GetMapiProperty("007D").ToString();            
             messageNode.Text = str;
             txtBox.AppendText(str + "\n");
 
@@ -282,22 +283,44 @@ namespace P7MViewer
             str = "Recipients: " + message.Recipients.Count;
             TreeNode recipientNode = messageNode.Nodes.Add(str);
             txtBox.AppendText(str + "\n");
+            HashSet<string> targets = new HashSet<string>();
             foreach (OutlookStorage.Recipient recipient in message.Recipients)
             {
                 // Load SMIME certificates from AD
-                if (!certs.ContainsKey(recipient.Email))
-                { 
-                    X509Certificate2 cert = GetUserCertificateFromAD(recipient.Email);
-                    if (cert != null)
-                    {
-                        certs.Add(recipient.Email, cert);
-                    }
-                }
+                targets.Add(recipient.Email);
                 str = recipient.Type + ": " + recipient.Email;
                 recipientNode.Nodes.Add(str);
                 txtBox.AppendText(str + "\n");
             }
-        
+
+            // Parse out from
+            string[] strings = Regex.Split(message.GetMapiProperty("007D").ToString(), Environment.NewLine);
+            foreach (string s in strings)
+            {
+                if (s.StartsWith("From:"))
+                {
+                    Match m = Regex.Match(s, "<(.*)>");
+                    
+                    if (m.Success)
+                    {
+                        targets.Add(m.Groups[1].Value);
+                    }
+                }
+            }
+            
+
+            foreach (string target in targets)
+            {
+                if (!certs.ContainsKey(target))
+                {
+                    X509Certificate2 cert = GetUserCertificateFromAD(target);
+                    if (cert != null)
+                    {
+                        certs.Add(target, cert);
+                    }
+                }
+            }
+
             str = "Attachments: " + message.Attachments.Count;
             TreeNode attachmentNode = messageNode.Nodes.Add(str);
             txtBox.AppendText(str+"\n");

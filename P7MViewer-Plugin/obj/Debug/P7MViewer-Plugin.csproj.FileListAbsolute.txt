@@ -9,3 +9,9 @@ D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csproj.Reso
 D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer.frmMain.resources
 D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer_Plugin.Properties.Resources.resources
 D:\VS-Projects\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csproj.GenerateResource.Cache
+C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csprojAssemblyReference.cache
+C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csproj.ResolveComReference.cache
+C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer.frmMain.resources
+C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer_Plugin.Properties.Resources.resources
+C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csproj.GenerateResource.cache
+C:\Users\z000csgk\Nextcloud\Sources\P7MViewer\P7MViewer-Plugin\obj\Debug\P7MViewer-Plugin.csproj.CoreCompileInputs.cache
