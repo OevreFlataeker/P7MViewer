@@ -35,20 +35,7 @@ namespace P7MViewer
             return string.Format("SubjectName: {0}, valid from: {1}, valid until: {2}", c.Subject, c.NotBefore, c.NotAfter);
         }
         public void parsePKCS7(byte[] pkcs7stream, TreeNode node)
-        {
-            /*FileStream encFile = new FileStream(
-               @"e:\sba-eda-smime.p7m",
-               FileMode.Open
-               );
-            BinaryReader reader = new BinaryReader(encFile);
-
-            byte[] data = new byte[encFile.Length];
-            reader.Read(data, 0, Convert.ToInt32(encFile.Length));
-            reader.Close();
-            TextReader tr = new StreamReader("e:\\ese-smime.p7m");
-            String str = tr.ReadToEnd();
-            data = Convert.FromBase64String(str);
-             */
+        {            
             byte[] data = pkcs7stream;
             try
             {
@@ -222,14 +209,9 @@ namespace P7MViewer
         }
 
         /// <summary>
-        /// Get user certificate from Active Directory (Source https://mjc.si/2016/12/10/get-user-certificate-from-active-directory/")
+        /// Get user certificate from Active Directory (Source adapted from https://mjc.si/2016/12/10/get-user-certificate-from-active-directory/")
         /// </summary>
-        /// <param name="ldapEntry">LDAP://DC=domain,DC=local</param>
-        /// <param name="ldapUserName">User to connect to Active Directory, set null if not required.</param>
-        /// <param name="ldapPassword">Password to connect to Active Directory, set null if not required.</param>
-        /// <param name="userIdentificator">user name to search in AD</param>
-        /// <param name="propertyName">Set property name, for example userCertificate</param>
-        /// <param name="Filter">Ldap filter string like "(&(objectClass=contact)(name=John))".</param>
+        /// <param name="email">EMail address to get the certificate for</param>
         /// <returns></returns>
         private static X509Certificate2 GetUserCertificateFromAD(string email)
         {
@@ -272,6 +254,7 @@ namespace P7MViewer
                 return null;
             }
         }
+		
         private void loadMessage(OutlookStorage.Message message, TreeNode messageNode)
         {                  
             String str;
@@ -314,11 +297,7 @@ namespace P7MViewer
                 recipientNode.Nodes.Add(str);
                 txtBox.AppendText(str + "\n");
             }
-
         
-
-            
-
             str = "Attachments: " + message.Attachments.Count;
             TreeNode attachmentNode = messageNode.Nodes.Add(str);
             txtBox.AppendText(str+"\n");
